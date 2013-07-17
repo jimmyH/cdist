@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# 2013 James Howlett
+#
+# This file is part of cdist.
+#
+# cdist is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# cdist is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cdist. If not, see <http://www.gnu.org/licenses/>.
+#
+#
+
+__line vhost_net1 --file /etc/rc.local --line 'exit 0' --state absent
+__line vhost_net2 --file /etc/rc.local --line "modprobe vhost_net >/dev/null 2>/dev/null" --state present
+require="__line/vhost_net1" __line vhost_net3 --file /etc/rc.local --line 'exit 0' --state present
+

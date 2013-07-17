@@ -1,0 +1,33 @@
+cdist-type__vhost_net(7)
+====================
+James Howlett <james.howlett@alcatel-lucent.com>
+
+
+NAME
+----
+cdist-type__vhost_net - Load the vhost_net module on boot
+
+
+DESCRIPTION
+-----------
+This cdist type loads the vhost_net module on boot
+
+
+REQUIRED PARAMETERS
+-------------------
+None.
+
+
+OPTIONAL PARAMETERS
+-------------------
+None.
+
+SEE ALSO
+--------
+- cdist-type(7)
+
+
+COPYING
+-------
+Copyright \(C) 2013 James Howlett. Free use of this software is
+granted under the terms of the GNU General Public License version 3 (GPLv3).

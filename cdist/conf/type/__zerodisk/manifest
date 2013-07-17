@@ -46,6 +46,7 @@ export require="__directory/$dir"
 __file /root/cdist/zerodisk/Makefile --source "$__type/files/Makefile" --state present
 __file /root/cdist/zerodisk/zerodisk.c --source "$__type/files/zerodisk.c" --state present
 
-__line rc.local1 --file /etc/rc.local --line 'exit 0' --state absent
-__line rc.local2 --file /etc/rc.local --line "/usr/sbin/zerodisk -f /zerodisk --min 8 --max 10 --freq 30 --rate 1024" --state present
+__line zerodisk1 --file /etc/rc.local --line 'exit 0' --state absent
+__line zerodisk2 --file /etc/rc.local --line "/usr/sbin/zerodisk -f /zerodisk --min 8 --max 10 --freq 30 --rate 1024" --state present
+require="__line/zerodisk1" __line zerodisk3 --file /etc/rc.local --line 'exit 0' --state present
 
