@@ -36,19 +36,29 @@ case "$personality" in
 
   # Things which we want to do to ALL hosts of a given OS
 
-  common_pkgs="git etckeeper iotop iftop strace traceroute sysstat tcpdump sudo pigz pbzip2 nscd ntp gcc make"
+  common_pkgs="git iotop iftop strace traceroute sysstat tcpdump sudo nscd ntp gcc make"
 
   case "$os" in
     debian|ubuntu)
-      for i in $common_pkgs molly-guard; do
+      for i in $common_pkgs molly-guard pbzip2 pigz etckeeper; do
         __package $i --state present
       done
       __snmpd
     ;;
     centos|redhat)
-      for i in $common_pkgs ; do
+      for i in $common_pkgs; do
         __package $i --state present
       done
+      case "$machine" in
+        i686)
+          # no pbzip2, pigz, etckeeper for i686
+        ;;
+        x86_64)
+          __package pbzip2 --state present
+          __package pigz --state present
+          __package etckeeper --state present
+        ;;
+      esac
       __snmpd
     ;;
   esac
