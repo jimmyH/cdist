@@ -1,0 +1,8 @@
+#!/bin/sh
+
+
+cat<<EOF
+cd /root/cdist/zerodisk
+make install
+EOF
+

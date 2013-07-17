@@ -1,0 +1,55 @@
+cdist-type__zerodisk(7)
+====================
+James Howlett <james.howlett@alcatel-lucent.com>
+
+
+NAME
+----
+cdist-type__zerodisk - Keep the disk zeroed
+
+
+DESCRIPTION
+-----------
+This cdist type allows you to easily keep disks zeroed - essential for thin provisioning.
+
+
+REQUIRED PARAMETERS
+-------------------
+None.
+
+
+OPTIONAL PARAMETERS
+-------------------
+
+
+location
+min
+max
+rate
+etc.
+
+source::
+   If supplied, use this file as /etc/issue instead of default.
+
+
+
+EXAMPLES
+--------
+
+--------------------------------------------------------------------------------
+__issue
+
+# When called from another type
+__issue --source "$__type/files/myfancyissue"
+--------------------------------------------------------------------------------
+
+
+SEE ALSO
+--------
+- cdist-type(7)
+
+
+COPYING
+-------
+Copyright \(C) 2013 James Howlett. Free use of this software is
+granted under the terms of the GNU General Public License version 3 (GPLv3).

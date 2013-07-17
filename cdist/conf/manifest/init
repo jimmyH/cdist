@@ -1,0 +1,141 @@
+
+# The cdist_personality explorer checks /etc/cdist-personality exists
+# This file describes the different personalities of the host and 
+# whether cdist is enabled on that host
+# Supported personalities:
+# enabled
+# clearcase
+# kvm
+# ldap
+# thin
+
+
+personality=""
+if [ -f $__explorer/cdist_personality ] ; then
+  personality=`cat "$__explorer/cdist_personality"`
+fi
+
+case "$personality" in
+  *"enabled"*)
+
+  # Record last time cdist has been run on this host
+  __file /etc/cdist-lastrun
+  __cdistmarker --destination /etc/cdist-lastrun
+
+  hostname=`cat "$__explorer/hostname"`
+  lsb_codename=`cat "$__explorer/lsb_codename"`
+  lsb_description=`cat "$__explorer/lsb_description"`
+  lsb_id=`cat "$__explorer/lsb_id"`
+  lsb_release=`cat "$__explorer/lsb_release"`
+  machine=`cat "$__explorer/machine"`
+  os=`cat "$__explorer/os"`
+  os_version=`cat "$__explorer/os_version"`
+
+  echo "$__target_host: Personalities : ${personality}"
+  echo "$__target_host: $hostname $lsb_codename $lsb_description $lsb_id $lsb_release $machine $os $os_version"
+
+  # Things which we want to do to ALL hosts of a given OS
+
+  common_pkgs="git etckeeper iotop iftop strace traceroute sysstat tcpdump sudo pigz pbzip2 nscd ntp gcc make"
+
+  case "$os" in
+    debian|ubuntu)
+      for i in $common_pkgs molly-guard snmpd ; do
+        __package $i --state present
+      done
+      __file /etc/snmp/snmpd.conf --owner root --group root --mode 600 --source - << DONE
+agentAddress udp:161,udp6:[::1]:161
+view   systemonly  included   .1.3.6.1.2.1.1
+view   systemonly  included   .1.3.6.1.2.1.25.1
+rocommunity public 135.0.0.0/8
+rouser   authOnlyUser
+sysLocation    Quadrant, Swindon
+sysContact     James Howlett <james.howlett@alcatel-lucent.com>
+sysServices    72
+proc  mountd
+proc  ntalkd    4
+proc  sendmail 10 1
+disk       /     10000
+disk       /var  5%
+includeAllDisks  10%
+load   12 10 5
+master          agentx
+DONE
+    ;;
+    centos|redhat)
+    for i in $common_pkgs net-snmp ; do
+      __package $i --state present
+    done
+    ;;
+  esac
+
+  case "$personality" in
+    *"thin"*)
+      case "$os" in
+        debian|ubuntu|centos|redhat)
+          echo "Personality thin"
+          __zerodisk root
+        ;;
+        *)
+          echo "WARNING: $os not supported for thin"
+        ;;
+      esac
+    ;;
+  esac
+  case "$personality" in
+    *"kvm"*)
+      case "$os" in
+        debian|ubuntu)
+          echo "Personality kvm"
+          for i in qemu-kvm libvirt-bin vlan ifenslave open-iscsi iscsitarget iscsitarget-dkms glusterfs-server; do
+            __package $i --state present
+          done
+          __line libvirt --file /etc/libvirt/libvirtd.conf --line 'listen_tcp = 1'
+
+
+        ;;
+        *)
+          echo "WARNING: $os not supported for kvm"
+        ;;
+      esac
+    ;;
+  esac
+  case "$personality" in
+    *"ldap"*)
+      case "$os" in
+        debian|ubuntu)
+          echo "Personality ldap"
+          for i in nslcd libnss-ldap libpam-ldap ldap-utils; do
+            __package $i --state present
+          done
+        ;;
+      esac
+    ;;
+  esac
+  case "$personality" in
+    *"clearcase"*)
+      case "$os" in
+        centos|redhat)
+          echo "Personality clearcase"
+          # hosts with clearcase installed...
+          # additional packages
+          # services
+          # mountpoints (eg home dirs)
+          # autofs 
+        ;;
+        *)
+          echo "WARNING: $os not supported for clearcase"
+        ;;
+      esac
+    ;;
+  esac
+
+  # Things we want to do for a specific host
+  case "$hostname" in
+    cdist.ib.alcatel-lucent.com)
+    ;;
+  esac 
+  
+  ;;
+esac
+
