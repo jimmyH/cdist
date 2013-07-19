@@ -36,11 +36,11 @@ case "$personality" in
 
   # Things which we want to do to ALL hosts of a given OS
 
-  common_pkgs="git iotop iftop strace traceroute sysstat tcpdump sudo nscd ntp gcc make"
+  common_pkgs="git iotop strace traceroute sysstat tcpdump sudo nscd ntp gcc make"
 
   case "$os" in
     debian|ubuntu)
-      for i in $common_pkgs molly-guard pbzip2 pigz etckeeper; do
+      for i in $common_pkgs molly-guard pbzip2 pigz etckeeper parted iftop; do
         __package $i --state present
       done
       __snmpd
@@ -49,14 +49,26 @@ case "$personality" in
       for i in $common_pkgs; do
         __package $i --state present
       done
-      case "$machine" in
-        i686)
-          # no pbzip2, pigz, etckeeper for i686
+      case "$lsb_release" in
+        5.*)
+        case "$machine" in
+          i686)
+            # 5.x i686 - no iftop, pbzip2, pigz, etckeeper
+          ;;
+          x86_64)
+            # 5.x x86_64 - no iftop, pbzip2, pigz, etckeeper 
+          ;;
+        esac
         ;;
-        x86_64)
-          __package pbzip2 --state present
-          __package pigz --state present
-          __package etckeeper --state present
+        6.*)
+        case "$machine" in
+          i686)
+            # 6.x i686 - no iftop, pbzip2, pigz, etckeeper 
+          ;;
+          x86_64)
+            # 6.x x86_64 - no iftop, pbzip2, pigz, etckeeper 
+          ;;
+        esac
         ;;
       esac
       __snmpd
@@ -85,7 +97,7 @@ case "$personality" in
           for i in qemu-kvm libvirt-bin vlan ifenslave open-iscsi iscsitarget iscsitarget-dkms glusterfs-server; do
             __package $i --state present
           done
-          __line libvirt --file /etc/libvirt/libvirtd.conf --line 'listen_tcp = 1'
+          require="__package/libvirt-bin" __line libvirt --file /etc/libvirt/libvirtd.conf --line 'listen_tcp = 1'
 
 
         ;;

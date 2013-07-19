@@ -21,15 +21,18 @@
 
 destination="/etc/snmp/snmpd.conf"
 os="$(cat "$__global/explorer/os")"
+require=""
 
 case "$os" in
   centos|redhat)
     source="$__type/files/centos"
     __package net-snmp --state present
+    require="__package/net-snmp"
   ;;
   debian|ubuntu)
     source="$__type/files/debian"
     __package snmpd --state present
+    require="__package/snmpd"
   ;;
   *)
     source=""
@@ -37,6 +40,6 @@ case "$os" in
 esac
 
 if [ -n "$source" ] ; then
-  __file "$destination" --source "$source"
+  require=$require __file "$destination" --source "$source"
 fi
 
