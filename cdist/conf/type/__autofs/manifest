@@ -1,0 +1,43 @@
+#!/bin/sh
+#
+# 2013 James Howlett
+#
+# This file is part of cdist.
+#
+# cdist is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# cdist is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cdist. If not, see <http://www.gnu.org/licenses/>.
+#
+#
+
+os="$(cat "$__global/explorer/os")"
+require=""
+
+case "$os" in
+  debian|ubuntu)
+      for i in autofs; do
+        __package $i --state present
+        require="$require __package/$i"
+      done
+      require=$require __file "/etc/auto.master" --source "$__type/files/debian-auto.master" --mode 0644
+      require=$require __file "/etc/auto.net4" --source "$__type/files/debian-auto.net4" --mode 0755
+
+      # Note this is not really autofs stuff...
+      require=$require __file "/etc/default/nfs-common" --source "$__type/files/debian-nfs-common" --mode 0644
+      __link /srv/home --source /net4/nfs.ib.alcatel-lucent.com/ibu/home --type symbolic
+  ;;
+  *)
+    echo "WARNING: $os not supported yet for autofs configuration"
+  ;;
+esac
+
+

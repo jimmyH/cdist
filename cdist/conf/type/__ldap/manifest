@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+# 2013 James Howlett
+#
+# This file is part of cdist.
+#
+# cdist is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# cdist is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cdist. If not, see <http://www.gnu.org/licenses/>.
+#
+#
+
+os="$(cat "$__global/explorer/os")"
+require=""
+
+case "$os" in
+  debian|ubuntu)
+      for i in nslcd libnss-ldap libpam-ldap ldap-utils; do
+        __package $i --state present
+        require="$require __package/$i"
+      done
+      __file "/etc/ssl/certs/icebreakers-ca.crt" --source "$__type/files/icebreakers-ca.crt" --mode 0600
+      require=$require __file "/etc/ldap/ldap.conf" --source "$__type/files/debian-ldap.conf" --mode 0600
+      require=$require __file "/etc/nslcd.conf" --source "$__type/files/debian-nslcd.conf" --mode 0640 --group nslcd
+      __file "/etc/nsswitch.conf" --source "$__type/files/debian-nsswitch.conf" --mode 0644
+  ;;
+  *)
+    echo "WARNING: $os not supported yet for ldap configuration"
+  ;;
+esac
+
+

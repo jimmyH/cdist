@@ -109,14 +109,9 @@ case "$personality" in
   esac
   case "$personality" in
     *"ldap"*)
-      case "$os" in
-        debian|ubuntu)
-          echo "Personality ldap"
-          for i in nslcd libnss-ldap libpam-ldap ldap-utils; do
-            __package $i --state present
-          done
-        ;;
-      esac
+      echo "Personality ldap"
+      __ldap
+      __autofs
     ;;
   esac
   case "$personality" in
