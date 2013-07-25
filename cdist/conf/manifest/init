@@ -112,6 +112,7 @@ case "$personality" in
       echo "Personality ldap"
       __ldap
       __autofs
+      __sudo1
     ;;
   esac
   case "$personality" in

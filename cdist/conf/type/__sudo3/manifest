@@ -1,0 +1,8 @@
+#!/bin/sh
+
+__package sudo --state installed
+__directory /etc/sudoers.d --parents yes
+
+require="__directory/etc/sudoers.d"
+
+require=$require __file "/etc/sudoers.d/sudo-3" --source "$__type/files/sudo-3" --mode 0440

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+require="__package/sudo"
+
+require="$require"  __directory /etc/sudoers.d --parents
+
+require="$require __directory/etc/sudoers.d"
+
+require=$require __file "/etc/sudoers.d/sudo-1" --source "$__type/files/sudo-1" --mode 0440

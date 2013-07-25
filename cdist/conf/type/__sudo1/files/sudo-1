@@ -1,0 +1,6 @@
+#
+# Cdist managed file
+#
+
+%sudoer1 ALL=(ALL) ALL
+
