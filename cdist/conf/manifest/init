@@ -43,6 +43,7 @@ case "$personality" in
       for i in $common_pkgs molly-guard pbzip2 pigz etckeeper parted iftop; do
         __package $i --state present
       done
+      __package nano --state absent
       __snmpd
       __key_value Acquire::http::Proxy --file /etc/apt/apt.conf --delimiter ' ' --value "\\\"http://apt-proxy.ib.alcatel-lucent.com:3142\\\";"
 
