@@ -28,7 +28,7 @@ void sig_handler(int sig)
   {
     syslog(LOG_DAEMON|LOG_ERR,"Caught signal %d",sig);
     if (fd>0) close(fd);
-    if (filename) (void)unlink(filename);
+    if (filename) syslog(LOG_DAEMON|LOG_ERR,"Warning not deleting %s",filename);
     _exit(1);
   }
 }
@@ -53,7 +53,6 @@ unsigned long get_blocksize(int fd)
     strerror_r(errno,errbuf,sizeof(errbuf));
     syslog(LOG_DAEMON|LOG_ERR,"Failed to stat filesystem: %s",errbuf);
     close(fd);
-    (void)unlink(filename);
     exit(1);
   }
   return buf.f_bsize;
@@ -68,7 +67,6 @@ double get_diskfree(int fd)
     strerror_r(errno,errbuf,sizeof(errbuf));
     syslog(LOG_DAEMON|LOG_ERR,"Failed to stat filesystem: %s",errbuf);
     close(fd);
-    (void)unlink(filename);
     exit(1);
   }
   return ( (double)100.0 * buf.f_bavail ) / buf.f_blocks; // Note this is based on unprivileged users free space.
@@ -83,7 +81,6 @@ uint64_t get_disksize(int fd)
     strerror_r(errno,errbuf,sizeof(errbuf));
     syslog(LOG_DAEMON|LOG_ERR,"Failed to stat filesystem: %s",errbuf);
     close(fd);
-    (void)unlink(filename);
     exit(1);
   }
   return (uint64_t) (buf.f_blocks*buf.f_frsize);
@@ -98,7 +95,6 @@ off_t get_filesize(int fd)
     strerror_r(errno,errbuf,sizeof(errbuf));
     syslog(LOG_DAEMON|LOG_ERR,"Failed to stat zerofile: %s",errbuf);
     close(fd);
-    (void)unlink(filename);
     exit(1);
   }
   return buf.st_size;
@@ -113,6 +109,7 @@ int main(int argc,char** argv)
   int ratelimit = 0;
   int freq = 0;
   int i = 1;
+  struct flock lck;
 
   if (argc!=11) usage(argv[0]);
 
@@ -134,7 +131,7 @@ int main(int argc,char** argv)
     exit(1);
   }
 
-  fd = open(filename,O_RDWR | O_CREAT | O_EXCL,S_IRWXU);
+  fd = open(filename,O_RDWR | O_CREAT,S_IRWXU);
   if (fd==-1)
   {
     perror("Failed to open zerofile");
@@ -143,16 +140,32 @@ int main(int argc,char** argv)
 
   daemon(1,0);
 
+  // Try to lock the zerofile (must be done after calling daemon() because
+  // locks are not inherited by children).
+  lck.l_type = F_WRLCK;
+  lck.l_whence = SEEK_SET;
+  lck.l_start = 0;
+  lck.l_len = 0;
+  lck.l_pid = getpid();
+  if (-1==fcntl(fd,F_SETLK,&lck))
+  {
+    char errbuf[1024];
+    strerror_r(errno,errbuf,sizeof(errbuf));
+    syslog(LOG_DAEMON|LOG_ERR,"Failed to lock file: %s",errbuf);
+    close(fd);
+    exit(1);
+  }
+
   openlog(argv[0], LOG_PID, LOG_DAEMON);
 
   syslog(LOG_DAEMON|LOG_NOTICE,"monitoring %s\n",filename);
 
   unsigned long blocksize = get_blocksize(fd);
-  syslog(LOG_DAEMON|LOG_NOTICE,"Blocksize is %lu\n",blocksize);
+  syslog(LOG_DAEMON|LOG_NOTICE,"Blocksize is %llu\n",blocksize);
   ratelimit = (freq*ratelimit*1024)/blocksize;
 
   uint64_t disksize = get_disksize(fd);
-  syslog(LOG_DAEMON|LOG_NOTICE,"Disksize is %lu GB\n",disksize/(1024*1024*1024));
+  syslog(LOG_DAEMON|LOG_NOTICE,"Disksize is %llu GB\n",disksize/(1024*1024*1024));
 
   char * zeroblock = malloc(blocksize);
   if (!zeroblock)
@@ -161,7 +174,6 @@ int main(int argc,char** argv)
     strerror_r(errno,errbuf,sizeof(errbuf));
     syslog(LOG_DAEMON|LOG_ERR,"Failed to malloc zeroblock: %s",errbuf);
     close(fd);
-    (void)unlink(filename);
     exit(1);
   }
 
@@ -183,7 +195,6 @@ int main(int argc,char** argv)
         strerror_r(errno,errbuf,sizeof(errbuf));
         syslog(LOG_DAEMON|LOG_ERR,"Failed to lseek zerofile: %s",errbuf);
         close(fd);
-        (void)unlink(filename);
         exit(1);
       }
 
@@ -194,7 +205,7 @@ int main(int argc,char** argv)
       if (verbose)
       {
         syslog(LOG_DAEMON|LOG_INFO,"Percentage free %f, file size is %lld kB\n",diskfree,filesize/1024);
-        syslog(LOG_DAEMON|LOG_INFO,"growing zerofile by %lu KB (%lu KB)\n",delta/1024,blocks*blocksize/1024);
+        syslog(LOG_DAEMON|LOG_INFO,"growing zerofile by %llu KB (%llu KB)\n",delta/1024,blocks*blocksize/1024);
       }
       for (i=0;i<blocks;++i)
       {
@@ -204,7 +215,6 @@ int main(int argc,char** argv)
           strerror_r(errno,errbuf,sizeof(errbuf));
           syslog(LOG_DAEMON|LOG_ERR,"Failed to write zerofile: %s",errbuf);
           close(fd);
-          (void)unlink(filename);
           exit(1);
         }
       }
@@ -220,7 +230,7 @@ int main(int argc,char** argv)
         if (verbose)
         {
           syslog(LOG_DAEMON|LOG_INFO,"Percentage free %f, file size is %lld kB\n",diskfree,filesize/1024);
-          syslog(LOG_DAEMON|LOG_INFO,"shrinking zerofile by %lu KB\n",delta/1024);
+          syslog(LOG_DAEMON|LOG_INFO,"shrinking zerofile by %llu KB\n",delta/1024);
         }
         if (-1==ftruncate(fd, filesize-delta))
         {               
@@ -228,7 +238,6 @@ int main(int argc,char** argv)
           strerror_r(errno,errbuf,sizeof(errbuf));
           syslog(LOG_DAEMON|LOG_ERR,"Failed to truncate zerofile: %s",errbuf);
           close(fd);
-          (void)unlink(filename);
           exit(1);
         }
       }

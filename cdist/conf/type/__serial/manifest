@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# 2013 James Howlett
+#
+# This file is part of cdist.
+#
+# cdist is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# cdist is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cdist. If not, see <http://www.gnu.org/licenses/>.
+#
+#
+
+os="$(cat "$__global/explorer/os")"
+require=""
+
+case "$os" in
+  debian)
+    __key_value GRUB_TERMINAL --file /etc/default/grub --delimiter '=' --value "serial"
+    __key_value GRUB_SERIAL_COMMAND --file /etc/default/grub --delimiter '=' \
+      --value "\\\"serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1\\\""
+    __key_value GRUB_CMDLINE_LINUX_DEFAULT --file /etc/default/grub --delimiter '=' --value "\\\"console=tty0 console=ttyS0,115200n8\\\""
+
+    __key_value T0:23:respawn:/sbin/getty --file /etc/inittab --delimit ' ' \
+       --value " -L ttyS0 115200 vt102"
+    echo "Please run update-grub manually"
+
+  ;;
+  *)
+    echo "WARNING: $os not supported yet for serial configuration"
+  ;;
+esac
+
+

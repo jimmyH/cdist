@@ -44,6 +44,8 @@ case "$personality" in
         __package $i --state present
       done
       __snmpd
+      __key_value Acquire::http::Proxy --file /etc/apt/apt.conf --delimiter ' ' --value "\\\"http://apt-proxy.ib.alcatel-lucent.com:3142\\\";"
+
     ;;
     centos|redhat)
       for i in $common_pkgs; do
@@ -82,6 +84,7 @@ case "$personality" in
           echo "Personality thin"
           __zerodisk root
           __vhost_net
+          __serial
         ;;
         *)
           echo "WARNING: $os not supported for thin"
