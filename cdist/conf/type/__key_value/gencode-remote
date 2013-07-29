@@ -46,7 +46,8 @@ case "$state_should" in
             ;;
             wrongvalue)
                 # change exisiting value
-                echo "sed \"s|^$key\($delimiter\+\).*|$key\1$value|\" \"$file\" > \"$file.cdist-tmp\""
+# TODO : Changed sed to work with dash. BUT this will break other /bin/sh implementations
+                echo "sed \"s|^$key\($delimiter\+\).*|$key\\\1$value|\" \"$file\" > \"$file.cdist-tmp\""
                 echo "mv \"$file.cdist-tmp\" \"$file\""
             ;;
             *)
