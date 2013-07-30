@@ -24,7 +24,7 @@ require=""
 
 case "$os" in
   debian|ubuntu)
-      for i in nslcd libnss-ldap libpam-ldap ldap-utils; do
+      for i in nslcd libnss-ldapd libpam-ldapd ldap-utils; do
         __package $i --state present
         require="$require __package/$i"
       done
