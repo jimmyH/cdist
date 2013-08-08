@@ -98,12 +98,11 @@ case "$personality" in
       case "$os" in
         debian|ubuntu)
           echo "Personality kvm"
-          for i in qemu-kvm libvirt-bin vlan ifenslave open-iscsi iscsitarget iscsitarget-dkms glusterfs-server; do
+          for i in qemu-kvm libvirt-bin vlan ifenslave glusterfs-server; do
             __package $i --state present
           done
           require="__package/libvirt-bin" __line libvirt --file /etc/libvirt/libvirtd.conf --line 'listen_tcp = 1'
-
-
+          __iscsi
         ;;
         *)
           echo "WARNING: $os not supported for kvm"
