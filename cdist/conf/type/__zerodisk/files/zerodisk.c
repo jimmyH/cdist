@@ -35,10 +35,10 @@ void sig_handler(int sig)
 
 void usage(char* c)
 {
-  printf("usage: zerodisk -f <filename> --min <%> --max <%> --freq <seconds> --rate <kB/s>\n");
+  printf("usage: zerodisk -f <filename> --min <%%> --max <%%> --freq <seconds> --rate <kB/s>\n");
   printf("  -f <filename>    - Name of file full of zeroes\n");
-  printf("  --min <%>  - Minimum amount of free disk space before reducing the zero file\n");
-  printf("  --max <%>  - Maximum amount of free disk space before increasing the zero file\n");
+  printf("  --min <%%>  - Minimum amount of free disk space before reducing the zero file\n");
+  printf("  --max <%%>  - Maximum amount of free disk space before increasing the zero file\n");
   printf("  --freq <seconds> - How often to monitor the amount of free disk space\n");
   printf("  --rate <kB/s> -    Max IO rate to write zeroes\n");
   exit(0);
@@ -83,10 +83,10 @@ uint64_t get_disksize(int fd)
     close(fd);
     exit(1);
   }
-  return (uint64_t) (buf.f_blocks*buf.f_frsize);
+  return (uint64_t) (buf.f_blocks)*buf.f_frsize;
 }
 
-off_t get_filesize(int fd)
+uint64_t get_filesize(int fd)
 {
   struct stat buf;
   if (fstat(fd,&buf)==-1)
@@ -97,13 +97,12 @@ off_t get_filesize(int fd)
     close(fd);
     exit(1);
   }
-  return buf.st_size;
+  return (uint64_t)buf.st_size;
 }
 
 
 int main(int argc,char** argv)
 {
-  int rc;
   int min = 0;
   int max = 0;
   int ratelimit = 0;
@@ -160,12 +159,12 @@ int main(int argc,char** argv)
 
   syslog(LOG_DAEMON|LOG_NOTICE,"monitoring %s\n",filename);
 
-  unsigned long blocksize = get_blocksize(fd);
-  syslog(LOG_DAEMON|LOG_NOTICE,"Blocksize is %llu\n",blocksize);
+  uint64_t blocksize = get_blocksize(fd);
+  syslog(LOG_DAEMON|LOG_NOTICE,"Blocksize is %lld\n",blocksize);
   ratelimit = (freq*ratelimit*1024)/blocksize;
 
   uint64_t disksize = get_disksize(fd);
-  syslog(LOG_DAEMON|LOG_NOTICE,"Disksize is %llu GB\n",disksize/(1024*1024*1024));
+  syslog(LOG_DAEMON|LOG_NOTICE,"Disksize is %lld GB\n",disksize/((uint64_t)1024*1024*1024));
 
   char * zeroblock = malloc(blocksize);
   if (!zeroblock)
@@ -182,11 +181,11 @@ int main(int argc,char** argv)
   while (1)
   {
     double diskfree = get_diskfree(fd);
-    off_t filesize = get_filesize(fd);
+    uint64_t filesize = get_filesize(fd);
 
     if ( diskfree > max )
     {
-      off_t delta = ((diskfree-max)/100)*disksize;
+      uint64_t delta = ((diskfree-max)/100)*disksize;
       delta = (delta/blocksize)*blocksize; // Round to blocksize
 
       if ( (off_t)-1==lseek(fd,0,SEEK_END))
@@ -205,7 +204,7 @@ int main(int argc,char** argv)
       if (verbose)
       {
         syslog(LOG_DAEMON|LOG_INFO,"Percentage free %f, file size is %lld kB\n",diskfree,filesize/1024);
-        syslog(LOG_DAEMON|LOG_INFO,"growing zerofile by %llu KB (%llu KB)\n",delta/1024,blocks*blocksize/1024);
+        syslog(LOG_DAEMON|LOG_INFO,"growing zerofile by %lld KB (%lld KB)\n",delta/1024,blocks*blocksize/1024);
       }
       for (i=0;i<blocks;++i)
       {
@@ -222,7 +221,7 @@ int main(int argc,char** argv)
     }
     else if ( diskfree < min )
     {
-      off_t delta = ((min-diskfree)/100)*disksize;
+      uint64_t delta = ((min-diskfree)/100)*disksize;
       delta = (delta/blocksize)*blocksize; // Round to blocksize
       if (delta>filesize) delta=filesize;
       if (delta>0)
@@ -230,9 +229,9 @@ int main(int argc,char** argv)
         if (verbose)
         {
           syslog(LOG_DAEMON|LOG_INFO,"Percentage free %f, file size is %lld kB\n",diskfree,filesize/1024);
-          syslog(LOG_DAEMON|LOG_INFO,"shrinking zerofile by %llu KB\n",delta/1024);
+          syslog(LOG_DAEMON|LOG_INFO,"shrinking zerofile by %lld KB\n",delta/1024);
         }
-        if (-1==ftruncate(fd, filesize-delta))
+        if (-1==ftruncate(fd, (off_t)(filesize-delta)))
         {               
           char errbuf[1024];
           strerror_r(errno,errbuf,sizeof(errbuf));
