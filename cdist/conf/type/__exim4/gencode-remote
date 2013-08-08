@@ -1,0 +1,24 @@
+#!/bin/sh
+
+hostname="$(cat "$__global/explorer/hostname")"
+
+cat<<EOF
+
+# Set mailname
+echo "ib.alcatel-lucent.com" > /etc/mailname
+chmod 0644 /etc/mailname
+
+# Update exim4 configuration
+# Make sure we don't break our relay host...
+if [ `grep -c "dc_relay_nets=''" /etc/exim4/update-exim4.conf.conf` -eq "1" ] ; then
+  cat /etc/exim4/update-exim4.conf.conf.TMP | sed 's/CDIST_HOSTNAME/'$hostname'/g'  > /etc/exim4/update-exim4.conf.conf
+  /usr/sbin/update-exim4.conf
+fi
+rm -f /etc/exim4/update-exim4.conf.conf.TMP
+
+# Update aliases - if james is not an alias for root then add the specified alias...
+sed -i '/root:.*james/ ! { s/root:.*/root: james/ }' /etc/aliases
+/usr/bin/newaliases
+
+EOF
+

@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# 2013 James Howlett
+#
+# This file is part of cdist.
+#
+# cdist is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# cdist is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cdist. If not, see <http://www.gnu.org/licenses/>.
+#
+#
+
+os="$(cat "$__global/explorer/os")"
+require=""
+
+case "$os" in
+  debian|ubuntu)
+      for i in exim4; do
+        __package $i --state present
+        require="$require __package/$i"
+      done
+      require=$require __file "/etc/exim4/update-exim4.conf.conf.TMP" --source "$__type/files/debian-update-exim4.conf.conf" --mode 0644
+# TODO aliases
+  ;;
+  *)
+    echo "WARNING: $os not supported yet for exim4 configuration"
+  ;;
+esac
+
+
