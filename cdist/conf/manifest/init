@@ -46,7 +46,7 @@ case "$personality" in
       __package nano --state absent
       __snmpd
       __key_value Acquire::http::Proxy --file /etc/apt/apt.conf --delimiter ' ' --value "\\\"http://apt-proxy.ib.alcatel-lucent.com:3142\\\";"
-
+      __exim4
     ;;
     centos|redhat)
       for i in $common_pkgs; do
