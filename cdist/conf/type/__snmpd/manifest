@@ -33,7 +33,8 @@ case "$os" in
     source="$__type/files/debian"
     __package snmpd --state present
     require="__package/snmpd"
-    require=$require __key_value SNMPDOPTS --file /etc/default/snmpd --delimiter '=' --value "'-Ls6d -Lf /dev/null -u snmp -g snmp -I -smux -p /var/run/snmpd.pid'"
+    require=$require __key_value SNMPDOPTS --file /etc/default/snmpd --delimiter '=' --value "'-LS6d -Lf /dev/null -u snmp -g snmp -I -smux -p /var/run/snmpd.pid'"
+    require=$require __key_value TRAPDOPTS --file /etc/default/snmpd --delimiter '=' --value "'-LS6d -p /var/run/snmptrapd.pid'"
 
   ;;
   *)
