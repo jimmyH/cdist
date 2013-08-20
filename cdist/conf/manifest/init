@@ -40,7 +40,7 @@ case "$personality" in
 
   case "$os" in
     debian|ubuntu)
-      for i in $common_pkgs molly-guard pbzip2 pigz etckeeper parted iftop; do
+      for i in $common_pkgs molly-guard pbzip2 pigz etckeeper parted iftop pv; do
         __package $i --state present
       done
       __package nano --state absent
