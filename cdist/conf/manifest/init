@@ -84,7 +84,7 @@ case "$personality" in
         debian|ubuntu|centos|redhat)
           echo "Personality thin"
           __zerodisk root
-          __vhost_net
+    #      __vhost_net
           __serial
         ;;
         *)
