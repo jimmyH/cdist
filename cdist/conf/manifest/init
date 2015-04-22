@@ -44,8 +44,8 @@ case "$personality" in
         __package $i --state present
       done
       __package nano --state absent
-      __snmpd
-      __key_value Acquire::http::Proxy --file /etc/apt/apt.conf --delimiter ' ' --value "\\\"http://apt-proxy.ib.alcatel-lucent.com:3142\\\";"
+#      __snmpd
+#      __key_value Acquire::http::Proxy --file /etc/apt/apt.conf --delimiter ' ' --value "\\\"http://apt-proxy.ib.alcatel-lucent.com:3142\\\";"
       __exim4
     ;;
     centos|redhat)
@@ -84,7 +84,7 @@ case "$personality" in
         debian|ubuntu|centos|redhat)
           echo "Personality thin"
           __zerodisk root
-          __vhost_net
+    #      __vhost_net
           __serial
         ;;
         *)
@@ -102,6 +102,7 @@ case "$personality" in
             __package $i --state present
           done
           require="__package/libvirt-bin" __line libvirt --file /etc/libvirt/libvirtd.conf --line 'listen_tcp = 1'
+          require="__package/qemu-kvm" __line nestedkvm --file /etc/modprobe.d/dist.conf --line 'options kvm-intel nested=y'
           __iscsi
         ;;
         *)
